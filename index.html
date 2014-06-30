@@ -69,27 +69,35 @@ var tz = jstz.determine(); // Determines the time zone of the browser client
     var tzn = tz.name();
 
 // We actually need two times - the local time, (to display) AND GMT, (for the calculations).
+// http://www.iana.org/time-zones
 
-	//alert('Your timezone is: ' + tzn);
-	
+//alert('Your timezone is: ' + tzn);
+
 function getTime(zone, success) {
     var url = 'http://json-time.appspot.com/time.json?tz=' + zone,
         ud = 'json' + (+new Date());
     window[ud]= function(o){
         success && success(new Date(o.datetime), o);
     };
-	setTimeout(function(){
+    setTimeout(function(){
       document.getElementsByTagName('head')[0].appendChild((function(){
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.src = url + '&callback=' + ud;
         return s;
         })()
-		)
-	}, 500);
+        )
+    }, 500);
 }
 
+function timeapiCallback(json) {
+        alert(new Date(json.dateString));
+        //timeapiCallback({"dateString":"June 30, 2014 13:06:53 GMT+0100"});
+}
 
+function timeAPI(){
+    var url ="//timeapi.org/gmt/now.json?callback=timeapiCallback";
+}
 
 // Get London time, and format it:
 getTime('Europe/London', function(time){
