@@ -53,16 +53,51 @@ text {
 <!-- NTS:we should have vertical lines showing the logical time-zones -->
 <!-- could use http://qtip2.com/demos to add onHover times for each timezone N.B. Here be dragons -->
 <!--script src="http://d3js.org/d3.v3.min.js"></script-->
-<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.min.js"></script>
 <!--script src="http://d3js.org/d3.geo.projection.v0.min.js"></script-->
-<script src="http://cdnjs.cloudflare.com/ajax/libs/d3-geo-projection/0.2.9/d3.geo.projection.min.js"></script>
 <!--script src="http://d3js.org/topojson.v1.min.js"></script-->
-<script src="http://cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
+<!--script src="<script>loadProtocol !== document.location.protocol && document.write loadProtocol</script>//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script-->
 <!--http://cdn.bitbucket.org/pellepim/jstimezonedetect/downloads/jstz-1.0.4.min.js'
 -->
   <!--script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script-->
 <script>
+
+(function(undefined){
+
+    var loadProtocol = document.location.protocol;
+    if( loadProtocol === "file:"){
+        loadProtocol = 'http:';
+    }
+    var jslib = ['//cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.min.js',
+                '//cdnjs.cloudflare.com/ajax/libs/d3-geo-projection/0.2.9/d3.geo.projection.min.js',
+                '//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js',
+                '//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js'];
+    var DOMhead = document.getElementsByTagName('head')[0];
+
+    var go = false;
+    for(i=0;i<jslib.length;i++){
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = false;
+        script.src = loadProtocol + jslib[i];
+        //var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+        DOMhead.appendChild(script);
+        //if(i === jslib.length - 1){ go = script; }
+        go = script;
+        //console.log('loading: ' + loadProtocol + jslib[i]);
+    }
+
+    go.onreadystatechange = function(){ // IE
+        if(go.readyState == 'complete'){
+        //    console.log('loaded libs');
+            main();
+        }
+    };
+    go.onload = function(){ //firefox
+        //console.log('loaded libs');
+        main();
+    };
+
+function main(){
 
 var tz = jstz.determine(); // Determines the time zone of the browser client
 var tzn = tz.name();
@@ -235,6 +270,10 @@ function meanObliquityOfEcliptic(centuries) {
 function eccentricityEarthOrbit(centuries) {
   return 0.016708634 - centuries * (0.000042037 + 0.0000001267 * centuries);
 }
+
+} //main()
+
+}).call(this);
 
 </script>
 </body>
