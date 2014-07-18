@@ -64,51 +64,11 @@ text {
   <!--script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script-->
 <script>
 
-//var tz = jstz.determine_timezone(); // Determines the time zone of the browser client
 var tz = jstz.determine(); // Determines the time zone of the browser client
-    var tzn = tz.name();
+var tzn = tz.name();
 
 // We actually need two times - the local time, (to display) AND GMT, (for the calculations).
-
-	//alert('Your timezone is: ' + tzn);
-	
-function getTime(zone, success) {
-    var url = 'http://json-time.appspot.com/time.json?tz=' + zone,
-        ud = 'json' + (+new Date());
-    window[ud]= function(o){
-        success && success(new Date(o.datetime), o);
-    };
-	setTimeout(function(){
-      document.getElementsByTagName('head')[0].appendChild((function(){
-        var s = document.createElement('script');
-        s.type = 'text/javascript';
-        s.src = url + '&callback=' + ud;
-        return s;
-        })()
-		)
-	}, 500);
-}
-
-
-
-// Get London time, and format it:
-getTime('Europe/London', function(time){
-    var formatted = time.getHours() + ':' 
-                  + time.getMinutes() + ':'
-                  + time.getSeconds();
-    //alert( 'The time in London is ' + formatted );
-});	
-
-// fall back to the browser
-currentTime = new Date();
-time = currentTime.getTime();
-hours = currentTime.getHours();
-
-// do a scrape of time.is ?
-
-var yahootime = 'http://developer.yahooapis.com/TimeService/V1/getTime';
-// even without an appID it returns a 'Wed Jun 25 02:42:13 PDT 2014' timestamp ;-)
-
+// http://www.iana.org/time-zones
 
 var width = 960,
     height = 570;
@@ -118,10 +78,10 @@ var π = Math.PI,
     degrees = 180 / π;
 
 var formatDate = d3.time.format.utc("%b. %d, %Y"),
-    formatTime = d3.time.format.utc("%X UTC");
+    formatTime = d3.time.format.utc("%X UTC"),
+    formatDateHere = d3.time.format("%b. %d, %Y"),
+    formatTimeHere = d3.time.format("%X " + tzn);
 
-	
-	
 var circle = d3.geo.circle()
     .angle(90);
 
@@ -158,28 +118,26 @@ g.append("path")
     .datum(graticule)
     .attr("class", "graticule")
     .attr("d", path);
-	//bl.ocks.org/mbostock/raw/4090846/world-50m.json
-	 // problems with  cross-domain requests;
-		// not sure how to have the server set the header Access-Control-Allow-Origin: *. 
-		// for file:///home/alexx/example/code/templates/json/world-50m.json
-		// Cross-Origin Resource Sharing.
-		// d3.xhs maybe?
-		// "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files
-		// could we just gzip the json and stick it inline? yeah yeah, bad idea. but I'm tired.
 d3.json("var/world-50m.json", function(error, world) {
-  var dayOffset = 0;
 
   var date = svg.append("text")
       .attr("dy", "-1.35em");
 
   var time = svg.append("text")
-		.attr("tool-tip","Turn http://bl.ocks.org/mbostock/9658291 into a geoClock")
-		.attr("onMouseOver","alert('Turn http://bl.ocks.org/mbostock/9658291 into a geoClock');")
-		.attr("title","Turn http://bl.ocks.org/mbostock/9658291 into a geoClock");
+        .attr("tool-tip","Turn http://bl.ocks.org/mbostock/9658291 into a geoClock")
+        .attr("onMouseOver","alert('Turn http://bl.ocks.org/mbostock/9658291 into a geoClock');")
+        .attr("title","Turn http://bl.ocks.org/mbostock/9658291 into a geoClock");
+
+
+    var localDate = svg.append("text").attr("dy","-1.35em").attr("id","localDate");
+    var localTime = svg.append("text").attr("id","localTime");
 
   svg.selectAll("text")
-      .attr("x", 16)
+      .attr("x", width - (width / 6))
       .attr("y", height - 16);
+
+  svg.selectAll("#localDate, #localTime")
+      .attr("x", 3);
 
   g.insert("path", ".graticule")
       .datum(topojson.feature(world, world.objects.land))
@@ -196,17 +154,14 @@ d3.json("var/world-50m.json", function(error, world) {
 
   d3.timer(function() {
    // this is where we should be checking the time remotely
-    var now = new Date(Date.now() + dayOffset);
-	// we only need to update at the top of the second, and only once a second
-	// and we need to adjust for what the local time.is 
-	// !While leaving the night.datum with the UTC time!
+    // via alexxroche.github.io/myntp.js/
+    var now = new Date(Date.now());
+    // MUST leaving the night.datum with the UTC time!
     date.text(formatDate(now));
     time.text(formatTime(now));
     night.datum(circle.origin(antipode(solarPosition(now)))).attr("d", path);
-    //dayOffset += 0 // now! (just not very accurate
-	//dayOffset += 864e3; // hours
-	//dayOffset += 864e4; // days
-    //dayOffset += 864e5; // seasons
+    localDate.text(formatDateHere(now));
+    localTime.text(formatTimeHere(now));
   });
 });
 
